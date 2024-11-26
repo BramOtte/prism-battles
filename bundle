@@ -1,0 +1,8 @@
+#!/usr/bin/sh
+set -e
+esbuild src/index.ts --bundle --format=esm  --outdir=target --sourcemap $@
+brotli -c target/index.js target/index.js.brotli
+du -h --apparent-size target/index.js.brotli
+
+gzip target/index.js -c > target/index.js.gzip
+du -h --apparent-size target/index.js.gzip

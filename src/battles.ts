@@ -1,4 +1,4 @@
-function dice() {
+export function dice() {
     const sides = 6;
     return 0| Math.random() * sides;
 }

@@ -1,0 +1,17 @@
+module <module_name>
+
+<variable_name> : <type> init <initial_value>;
+[<guard label>] <guard> ->
+    <probabillity> : (<variable_name>'=<value>) & (<variable_name>'=<value>) & ...
+    + <probabillity> : (<variable_name>'=<value>) & (<variable_name>'=<value>) & ...
+    + ...
+;
+// commands in a module can read variables from any module but only write to their own
+// when there is only one update the probabillity can be omited
+// an update of 'true' does not change the state
+
+endmodule
+
+
+const <type> <constant_name>;
+P=? [F <guard>]
