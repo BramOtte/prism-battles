@@ -24,7 +24,7 @@ d10: [0..max_attack] init 0;
 wounds: [0..max_attack] init 0;
 points: [0..max_attack] init 0;
 
-[first_assault] r=0
+[first_assault] r=0 & d1+d2+d3+d4+d5 < max_attack // & d2 < max_attack & d3 < max_attack & d4 < max_attack & d5 < max_attack
         ->1/6: true
         + 1/6: (d1' = d1 + (defense>1?1:0)) & (wounds' = wounds + (defense<=1?1:0))
         + 1/6: (d2' = d2 + (defense>2?1:0)) & (wounds' = wounds + (defense<=2?1:0))
@@ -33,13 +33,15 @@ points: [0..max_attack] init 0;
         + 1/6: (d5' = d5 + (defense>5?1:0)) & (wounds' = wounds + (defense<=5?1:0))
     ;
 
-[first_count] r=1 -> (points' = d1+d2+d3+d4+d5);
+[first_assault] r=0 & d1+d2+d3+d4+d5 >= max_attack -> true;
+
+[first_count] r=1 -> (points' = min(max_attack, d1+d2+d3+d4+d5));
 
 // Choose to boost die to 5
-[first_boost] r=2 & d4 > 0                         & defense > 5  & points > 5-4 -> (points' = points - (5+1-4)) & (d6' = d6 + 5-4) & (d4' = d4 - 1) & (d5'=d5+1);
-[first_boost] r=2 & d4<=0 & d3 > 0                 & defense > 5  & points > 5-3 -> (points' = points - (5+1-3)) & (d6' = d6 + 5-4) & (d3' = d3 - 1) & (d5'=d5+1);
-[first_boost] r=2 & d4<=0 & d3<=0 & d2 > 0         & defense > 5  & points > 5-2 -> (points' = points - (5+1-2)) & (d6' = d6 + 5-4) & (d2' = d2 - 1) & (d5'=d5+1);
-[first_boost] r=2 & d4<=0 & d3<=0 & d2<=0 & d1 > 0 & defense > 5  & points > 5-1 -> (points' = points - (5+1-1)) & (d6' = d6 + 5-4) & (d1' = d1 - 1) & (d5'=d5+1);
+[first_boost] r=2 & d4 > 0                         & defense > 5  & points > 5-4 -> (points' = max(0, points - (5+1-4))) & (d6' = min(max_attack, d6 + 5-4)) & (d4' = max(0, d4 - 1)) & (d5'=min(max_attack, d5+1));
+[first_boost] r=2 & d4<=0 & d3 > 0                 & defense > 5  & points > 5-3 -> (points' = max(0, points - (5+1-3))) & (d6' = min(max_attack, d6 + 5-3)) & (d3' = max(0, d3 - 1)) & (d5'=min(max_attack, d5+1));
+[first_boost] r=2 & d4<=0 & d3<=0 & d2 > 0         & defense > 5  & points > 5-2 -> (points' = max(0, points - (5+1-2))) & (d6' = min(max_attack, d6 + 5-2)) & (d2' = max(0, d2 - 1)) & (d5'=min(max_attack, d5+1));
+[first_boost] r=2 & d4<=0 & d3<=0 & d2<=0 & d1 > 0 & defense > 5  & points > 5-1 -> (points' = max(0, points - (5+1-1))) & (d6' = min(max_attack, d6 + 5-1)) & (d1' = max(0, d1 - 1)) & (d5'=min(max_attack, d5+1));
 
 // Choose to not boost die
 [first_boost] r=2 -> true;
@@ -56,30 +58,31 @@ points: [0..max_attack] init 0;
 // Choose to reroll die for second assault
 [second_assault] r=4 & d5 > 0
         ->1/6: (d5' = d5-1)// (d0'=d0+1)
-        + 1/6: (d5' = d5-1) & (d6'  = d6  + (defense>6 ?1:0)) & (wounds' = wounds + (defense<=6 ?1:0))
-        + 1/6: (d5' = d5-1) & (d7'  = d7  + (defense>7 ?1:0)) & (wounds' = wounds + (defense<=7 ?1:0))
-        + 1/6: (d5' = d5-1) & (d8'  = d8  + (defense>8 ?1:0)) & (wounds' = wounds + (defense<=8 ?1:0))
-        + 1/6: (d5' = d5-1) & (d9'  = d9  + (defense>9 ?1:0)) & (wounds' = wounds + (defense<=9 ?1:0))
-        + 1/6: (d5' = d5-1) & (d10' = d10 + (defense>10?1:0)) & (wounds' = wounds + (defense<=10?1:0))
+        + 1/6: (d5' = d5-1) & (d6'  = min(d6  + max_attack, (defense>6 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=6 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d7'  = min(d7  + max_attack, (defense>7 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=7 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d8'  = min(d8  + max_attack, (defense>8 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=8 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d9'  = min(d9  + max_attack, (defense>9 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=9 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d10' = min(d10 + max_attack, (defense>10?1:0))) & (wounds' = min(max_attack, wounds + (defense<=10?1:0)))
     ;
 // Choose to not reroll the die for second assault
 [second_assault] r=4 -> true;
 
-[count] r=5 -> (points' = d1+d2+d3+d4+d5+d6+d7+d8+d9+d10);
+[count] r=5 & d1+d2+d3+d4+d5+d6+d7+d8+d9+d10 <= max_attack -> (points' = d1+d2+d3+d4+d5+d6+d7+d8+d9+d10);
 
 // TODO: use more quards instead of inline if
-[second_boost] r=6 & d10 > 0                                                                            & points > 0 -> (points' = points - (points > defense-10 ? defense+1-10 : 0)) & (wounds' = wounds + (points > defense-10 ? 1 : 0)) & (d10'= d10-1);
-[second_boost] r=6 & d10<=0 & d9 > 0                                                                    & points > 0 -> (points' = points - (points > defense-9  ? defense+1-9  : 0)) & (wounds' = wounds + (points > defense-9  ? 1 : 0)) & (d9' = d9 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8 > 0                                                            & points > 0 -> (points' = points - (points > defense-8  ? defense+1-8  : 0)) & (wounds' = wounds + (points > defense-8  ? 1 : 0)) & (d8' = d8 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7 > 0                                                    & points > 0 -> (points' = points - (points > defense-7  ? defense+1-7  : 0)) & (wounds' = wounds + (points > defense-7  ? 1 : 0)) & (d7' = d7 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6 > 0                                            & points > 0 -> (points' = points - (points > defense-6  ? defense+1-6  : 0)) & (wounds' = wounds + (points > defense-6  ? 1 : 0)) & (d6' = d6 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5 > 0                                    & points > 0 -> (points' = points - (points > defense-5  ? defense+1-5  : 0)) & (wounds' = wounds + (points > defense-5  ? 1 : 0)) & (d5' = d5 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4 > 0                            & points > 0 -> (points' = points - (points > defense-4  ? defense+1-4  : 0)) & (wounds' = wounds + (points > defense-4  ? 1 : 0)) & (d4' = d4 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3 > 0                    & points > 0 -> (points' = points - (points > defense-3  ? defense+1-3  : 0)) & (wounds' = wounds + (points > defense-3  ? 1 : 0)) & (d3' = d3 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3<=0 & d2 > 0            & points > 0 -> (points' = points - (points > defense-2  ? defense+1-2  : 0)) & (wounds' = wounds + (points > defense-2  ? 1 : 0)) & (d2' = d2 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3<=0 & d2<=0 & d1 > 0    & points > 0 -> (points' = points - (points > defense-1  ? defense+1-1  : 0)) & (wounds' = wounds + (points > defense-1  ? 1 : 0)) & (d1' = d1 -1);
-[second_boost] r=6 & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3<=0 & d2<=0 & d1<=0     & points > 0 -> (points' = points-1);
+[second_boost] r=6 & wounds < max_attack & d10 > 0                                                                            & points > 0 -> (points' = points - (points > defense-10 ? defense+1-10 : 0)) & (wounds' = wounds + (points > defense-10 ? 1 : 0)) & (d10'= d10-1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9 > 0                                                                    & points > 0 -> (points' = points - (points > defense-9  ? defense+1-9  : 0)) & (wounds' = wounds + (points > defense-9  ? 1 : 0)) & (d9' = d9 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8 > 0                                                            & points > 0 -> (points' = points - (points > defense-8  ? defense+1-8  : 0)) & (wounds' = wounds + (points > defense-8  ? 1 : 0)) & (d8' = d8 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7 > 0                                                    & points > 0 -> (points' = points - (points > defense-7  ? defense+1-7  : 0)) & (wounds' = wounds + (points > defense-7  ? 1 : 0)) & (d7' = d7 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6 > 0                                            & points > 0 -> (points' = points - (points > defense-6  ? defense+1-6  : 0)) & (wounds' = wounds + (points > defense-6  ? 1 : 0)) & (d6' = d6 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5 > 0                                    & points > 0 -> (points' = points - (points > defense-5  ? defense+1-5  : 0)) & (wounds' = wounds + (points > defense-5  ? 1 : 0)) & (d5' = d5 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4 > 0                            & points > 0 -> (points' = points - (points > defense-4  ? defense+1-4  : 0)) & (wounds' = wounds + (points > defense-4  ? 1 : 0)) & (d4' = d4 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3 > 0                    & points > 0 -> (points' = points - (points > defense-3  ? defense+1-3  : 0)) & (wounds' = wounds + (points > defense-3  ? 1 : 0)) & (d3' = d3 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3<=0 & d2 > 0            & points > 0 -> (points' = points - (points > defense-2  ? defense+1-2  : 0)) & (wounds' = wounds + (points > defense-2  ? 1 : 0)) & (d2' = d2 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3<=0 & d2<=0 & d1 > 0    & points > 0 -> (points' = points - (points > defense-1  ? defense+1-1  : 0)) & (wounds' = wounds + (points > defense-1  ? 1 : 0)) & (d1' = d1 -1);
+[second_boost] r=6 & wounds < max_attack & d10<=0 & d9<=0 & d8<=0 & d7<=0 & d6<=0 & d5<=0 & d4<=0 & d3<=0 & d2<=0 & d1<=0     & points > 0 -> (points' = points-1);
 [second_boost] r=6 & points <= 0 -> true;
+[second_boost] r=6 & wounds >= max_attack -> true;
 
 
 [end] r=7 -> true;
@@ -94,7 +97,7 @@ die_i: [0..max_attack] init attack;
 [first_assault] r=0 & die_i >  1 -> (die_i'=die_i-1);
 [first_assault] r=0 & die_i <= 1 -> (die_i'=attack) & (r'=1);
 
-[first_count] r=1 -> (r'=2) & (die_i'=d1+d2+d3+d4);
+[first_count] r=1 -> (r'=2) & (die_i'=min(max_attack, d1+d2+d3+d4));
 
 [first_boost] r=2 & die_i >  1 -> (die_i'= die_i-1);
 [first_boost] r=2 & die_i <= 1 -> (die_i'= d6) & (r'=3);
@@ -105,7 +108,7 @@ die_i: [0..max_attack] init attack;
 [second_assault] r=4 & die_i >  1 -> (die_i'= die_i-1);
 [second_assault] r=4 & die_i <= 1 -> (die_i'=attack) & (r'=5);
 
-[count] r=5 -> (r'=6) & (die_i'=d1+d2+d3+d4+d5+d6+d7+d8+d9+d10);
+[count] r=5 -> (r'=6) & (die_i'=min(max_attack, d1+d2+d3+d4+d5+d6+d7+d8+d9+d10));
 
 [second_boost] r=6 & die_i >  1 -> (die_i' = die_i-1);
 [second_boost] r=6 & die_i <= 1 -> (die_i' = 0) & (r'=7);
@@ -116,5 +119,6 @@ endmodule
 
 
 rewards "wounds"
-r = 6: wounds;
+r = 7: wounds;
+// r = 9: -999;
 endrewards
