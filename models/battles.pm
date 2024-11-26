@@ -1,8 +1,8 @@
 mdp
 
 const int max_attack = 10;
-const int attack = 6;
-const int defense = 6;
+const int attack = 10;
+const int defense = 10;
 
 module Dice
 // attack: [0..max_attack] init 6;
@@ -99,16 +99,17 @@ r: [0..7] init 0;
 die_i: [0..max_attack] init attack;
 
 [first_assault] r=0 & die_i >  1 -> (die_i'=die_i-1);
-[first_assault] r=0 & die_i <= 1 -> (die_i'=d1+d2+d3+d4+d5) & (r'=1);
+[first_assault] r=0 & die_i <= 1 -> (die_i'=attack) & (r'=1);
 
 [first_discard] r=1 & die_i >  1 -> (die_i'= die_i-1);
-[first_discard] r=1 & die_i <= 1 -> (die_i'=d1+d2+d3+d4+d5) & (r'=2);
+[first_discard] r=1 & die_i <= 1 -> (die_i'=attack) & (r'=2);
+// repeat first discard <attack> times
 
 [first_boost] r=2 & die_i >  1 -> (die_i'= die_i-1);
 [first_boost] r=2 & die_i <= 1 -> (die_i'= d5) & (r'=3);
 
 [second_assault] r=3 & die_i >  1 -> (die_i'= die_i-1);
-[second_assault] r=3 & die_i <= 1 -> (die_i'=d1+d2+d3+d4+d5+d6+d7+d8+d9+d10) & (r'=4);
+[second_assault] r=3 & die_i <= 1 -> (die_i'=attack) & (r'=4);
 
 [count] r=4 -> (r'=5);
 
@@ -122,4 +123,8 @@ endmodule
 
 rewards "wounds"
 r = 6: wounds;
+endrewards
+
+rewards "dice"
+true: d1+d2+d3+d4+d5+d6+d7+d8+d9+d10;
 endrewards
