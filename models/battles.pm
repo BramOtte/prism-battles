@@ -2,7 +2,7 @@ mdp
 
 const int max_attack = 10;
 const int attack = 10;
-const int defense = 2;
+const int defense = 10;
 
 module Dice
 // attack: [0..max_attack] init 6;
@@ -37,35 +37,38 @@ points: [0..max_attack] init 0;
 
 [first_count] r=1 -> (points' = min(max_attack, d1+d2+d3+d4+d5));
 
+// TODO: don't use d6 as discard count
 // Choose to boost die to 5
-[first_boost] r=2 & d4 > 0                         & defense > 5  & points > 5-4 -> (points' = max(0, points - (5+1-4))) & (d6' = min(max_attack, d6 + 5-4)) & (d4' = max(0, d4 - 1)) & (d5'=min(max_attack, d5+1));
-[first_boost] r=2 & d4<=0 & d3 > 0                 & defense > 5  & points > 5-3 -> (points' = max(0, points - (5+1-3))) & (d6' = min(max_attack, d6 + 5-3)) & (d3' = max(0, d3 - 1)) & (d5'=min(max_attack, d5+1));
-[first_boost] r=2 & d4<=0 & d3<=0 & d2 > 0         & defense > 5  & points > 5-2 -> (points' = max(0, points - (5+1-2))) & (d6' = min(max_attack, d6 + 5-2)) & (d2' = max(0, d2 - 1)) & (d5'=min(max_attack, d5+1));
-[first_boost] r=2 & d4<=0 & d3<=0 & d2<=0 & d1 > 0 & defense > 5  & points > 5-1 -> (points' = max(0, points - (5+1-1))) & (d6' = min(max_attack, d6 + 5-1)) & (d1' = max(0, d1 - 1)) & (d5'=min(max_attack, d5+1));
+[first_boost] r=2 & d4 > 0                         & defense > 5  & points >= 5+1-4 & d1+d2+d3+d4+d5+d6+5-4 < max_attack -> (points' = points - (5+1-4)) & (d6'=d6+5-4) & (d4'=d4-1) & (d5'=d5+1);
+[first_boost] r=2 & d4<=0 & d3 > 0                 & defense > 5  & points >= 5+1-3 & d1+d2+d3+d4+d5+d6+5-3 < max_attack -> (points' = points - (5+1-3)) & (d6'=d6+5-3) & (d3'=d3-1) & (d5'=d5+1);
+[first_boost] r=2 & d4<=0 & d3<=0 & d2 > 0         & defense > 5  & points >= 5+1-2 & d1+d2+d3+d4+d5+d6+5-2 < max_attack -> (points' = points - (5+1-2)) & (d6'=d6+5-2) & (d2'=d2-1) & (d5'=d5+1);
+[first_boost] r=2 & d4<=0 & d3<=0 & d2<=0 & d1 > 0 & defense > 5  & points >= 5+1-1 & d1+d2+d3+d4+d5+d6+5-1 < max_attack -> (points' = points - (5+1-1)) & (d6'=d6+5-1) & (d1'=d1-1);
 
 // Choose to not boost die
 [first_boost] r=2 -> true;
 
 
-// [first_discard] r=3 & d6>0 & d1>0                           -> (d1'=d1-1) & (d6'=d6-1);
-// [first_discard] r=3 & d6>0 & d1<=0 & d2>0                   -> (d2'=d2-1) & (d6'=d6-1);
-// [first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3>0           -> (d3'=d3-1) & (d6'=d6-1);
-// [first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3<=0 & d4>0   -> (d4'=d4-1) & (d6'=d6-1);
-// [first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3<=0 & d4<=0  -> true;
+[first_discard] r=3 & d6>0 & d1>0                           -> (d1'=d1-1) & (d6'=d6-1);
+[first_discard] r=3 & d6>0 & d1<=0 & d2>0                   -> (d2'=d2-1) & (d6'=d6-1);
+[first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3>0           -> (d3'=d3-1) & (d6'=d6-1);
+[first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3<=0 & d4>0   -> (d4'=d4-1) & (d6'=d6-1);
+[first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3<=0 & d4<=0  -> true;
+[first_discard] r=3 & d6<=0  -> true;
 
 
 
-// // Choose to reroll die for second assault
-// [second_assault] r=4 & d5 > 0
-//         ->1/6: (d5' = d5-1)// (d0'=d0+1)
-//         + 1/6: (d5' = d5-1) & (d6'  = min(d6  + max_attack, (defense>6 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=6 ?1:0)))
-//         + 1/6: (d5' = d5-1) & (d7'  = min(d7  + max_attack, (defense>7 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=7 ?1:0)))
-//         + 1/6: (d5' = d5-1) & (d8'  = min(d8  + max_attack, (defense>8 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=8 ?1:0)))
-//         + 1/6: (d5' = d5-1) & (d9'  = min(d9  + max_attack, (defense>9 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=9 ?1:0)))
-//         + 1/6: (d5' = d5-1) & (d10' = min(d10 + max_attack, (defense>10?1:0))) & (wounds' = min(max_attack, wounds + (defense<=10?1:0)))
-//     ;
-// // Choose to not reroll the die for second assault
-// [second_assault] r=4 -> true;
+
+// Choose to reroll die for second assault
+[second_assault] r=4 & d5 > 0
+        ->1/6: (d5' = d5-1)// (d0'=d0+1)
+        + 1/6: (d5' = d5-1) & (d6'  = min(d6  + max_attack, (defense>6 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=6 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d7'  = min(d7  + max_attack, (defense>7 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=7 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d8'  = min(d8  + max_attack, (defense>8 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=8 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d9'  = min(d9  + max_attack, (defense>9 ?1:0))) & (wounds' = min(max_attack, wounds + (defense<=9 ?1:0)))
+        + 1/6: (d5' = d5-1) & (d10' = min(d10 + max_attack, (defense>10?1:0))) & (wounds' = min(max_attack, wounds + (defense<=10?1:0)))
+    ;
+// Choose to not reroll the die for second assault
+[second_assault] r=4 -> true;
 
 [count] r=5 & d1+d2+d3+d4+d5+d6+d7+d8+d9+d10 <= max_attack -> (points' = d1+d2+d3+d4+d5+d6+d7+d8+d9+d10);
 
@@ -107,18 +110,18 @@ r: [0..8] init 0;
 die_i: [0..max_attack] init attack;
 
 [first_assault] r=0 & die_i >  1 -> (die_i'=die_i-1);
-[first_assault] r=0 & die_i <= 1 -> (die_i'=attack) & (r'=5);
+[first_assault] r=0 & die_i <= 1 -> (die_i'=attack) & (r'=1);
 
-// [first_count] r=1 -> (r'=2) & (die_i'=min(max_attack, d1+d2+d3+d4));
+[first_count] r=1 -> (r'=2) & (die_i'=attack);
 
-// [first_boost] r=2 & die_i >  1 -> (die_i'= die_i-1);
-// [first_boost] r=2 & die_i <= 1 -> (die_i'= d6) & (r'=3);
+[first_boost] r=2 & die_i >  1 -> (die_i'= die_i-1);
+[first_boost] r=2 & die_i <= 1 -> (die_i'= attack) & (r'=3);
 
-// [first_discard] r=3 & die_i >  1 -> (die_i'= die_i-1);
-// [first_discard] r=3 & die_i <= 1 -> (die_i'=d5) & (r'=4);
+[first_discard] r=3 & die_i >  1 -> (die_i'= die_i-1);
+[first_discard] r=3 & die_i <= 1 -> (die_i'=d5) & (r'=4);
 
-// [second_assault] r=4 & die_i >  1 -> (die_i'= die_i-1);
-// [second_assault] r=4 & die_i <= 1 -> (die_i'=attack) & (r'=5);
+[second_assault] r=4 & die_i >  1 -> (die_i'= die_i-1);
+[second_assault] r=4 & die_i <= 1 -> (die_i'=attack) & (r'=5);
 
 [count] r=5 -> (r'=6) & (die_i'=min(max_attack, d1+d2+d3+d4+d5+d6+d7+d8+d9+d10));
 
