@@ -38,7 +38,6 @@ discard: [0..max_attack] init 0;
 
 [first_count] r=1 -> (points' = min(max_attack, d1+d2+d3+d4));
 
-// TODO: don't use d6 as discard count
 // Choose to boost die to 5
 [first_boost] r=2 & d4 > 0                         & defense > 5  & points >= 5+1-4 & d1+d2+d3+d4+d5+discard+5-4 < max_attack -> (points' = points - (5+1-4)) & (discard'=discard+5-4) & (d4'=d4-1) & (d5'=d5+1);
 [first_boost] r=2 & d4<=0 & d3 > 0                 & defense > 5  & points >= 5+1-3 & d1+d2+d3+d4+d5+discard+5-3 < max_attack -> (points' = points - (5+1-3)) & (discard'=discard+5-3) & (d3'=d3-1) & (d5'=d5+1);
