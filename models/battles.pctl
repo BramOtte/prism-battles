@@ -1,1 +1,11 @@
-Rmax=? [F r=8]
+Rmax=? [F r=8];
+Pmax=? [F r=8 & wounds>=1];
+Pmax=? [F r=8 & wounds>=2];
+Pmax=? [F r=8 & wounds>=3];
+Pmax=? [F r=8 & wounds>=4];
+Pmax=? [F r=8 & wounds>=5];
+Pmax=? [F r=8 & wounds>=6];
+Pmax=? [F r=8 & wounds>=7];
+Pmax=? [F r=8 & wounds>=8];
+Pmax=? [F r=8 & wounds>=9];
+Pmax=? [F r=8 & wounds>=10];
