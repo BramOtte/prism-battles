@@ -1,8 +1,8 @@
 mdp
 
 const int max_attack = 10;
-const int attack = 10;
-const int defense = 10;
+const int attack;
+const int defense;
 
 module Dice
 // attack: [0..max_attack] init 6;
@@ -23,6 +23,7 @@ d10: [0..max_attack] init 0;
 
 wounds: [0..max_attack] init 0;
 points: [0..max_attack] init 0;
+discard: [0..max_attack] init 0;
 
 [first_assault] r=0 & d1+d2+d3+d4+d5+wounds < max_attack
         ->1/6: true
@@ -35,25 +36,25 @@ points: [0..max_attack] init 0;
 
 [first_assault] r=0 & d1+d2+d3+d4+d5+wounds >= max_attack -> true;
 
-[first_count] r=1 -> (points' = min(max_attack, d1+d2+d3+d4+d5));
+[first_count] r=1 -> (points' = min(max_attack, d1+d2+d3+d4));
 
 // TODO: don't use d6 as discard count
 // Choose to boost die to 5
-[first_boost] r=2 & d4 > 0                         & defense > 5  & points >= 5+1-4 & d1+d2+d3+d4+d5+d6+5-4 < max_attack -> (points' = points - (5+1-4)) & (d6'=d6+5-4) & (d4'=d4-1) & (d5'=d5+1);
-[first_boost] r=2 & d4<=0 & d3 > 0                 & defense > 5  & points >= 5+1-3 & d1+d2+d3+d4+d5+d6+5-3 < max_attack -> (points' = points - (5+1-3)) & (d6'=d6+5-3) & (d3'=d3-1) & (d5'=d5+1);
-[first_boost] r=2 & d4<=0 & d3<=0 & d2 > 0         & defense > 5  & points >= 5+1-2 & d1+d2+d3+d4+d5+d6+5-2 < max_attack -> (points' = points - (5+1-2)) & (d6'=d6+5-2) & (d2'=d2-1) & (d5'=d5+1);
-[first_boost] r=2 & d4<=0 & d3<=0 & d2<=0 & d1 > 0 & defense > 5  & points >= 5+1-1 & d1+d2+d3+d4+d5+d6+5-1 < max_attack -> (points' = points - (5+1-1)) & (d6'=d6+5-1) & (d1'=d1-1);
+[first_boost] r=2 & d4 > 0                         & defense > 5  & points >= 5+1-4 & d1+d2+d3+d4+d5+discard+5-4 < max_attack -> (points' = points - (5+1-4)) & (discard'=discard+5-4) & (d4'=d4-1) & (d5'=d5+1);
+[first_boost] r=2 & d4<=0 & d3 > 0                 & defense > 5  & points >= 5+1-3 & d1+d2+d3+d4+d5+discard+5-3 < max_attack -> (points' = points - (5+1-3)) & (discard'=discard+5-3) & (d3'=d3-1) & (d5'=d5+1);
+[first_boost] r=2 & d4<=0 & d3<=0 & d2 > 0         & defense > 5  & points >= 5+1-2 & d1+d2+d3+d4+d5+discard+5-2 < max_attack -> (points' = points - (5+1-2)) & (discard'=discard+5-2) & (d2'=d2-1) & (d5'=d5+1);
+[first_boost] r=2 & d4<=0 & d3<=0 & d2<=0 & d1 > 0 & defense > 5  & points >= 5+1-1 & d1+d2+d3+d4+d5+discard+5-1 < max_attack -> (points' = points - (5+1-1)) & (discard'=discard+5-1) & (d1'=d1-1) & (d5'=d5+1);
 
 // Choose to not boost die
 [first_boost] r=2 -> true;
 
 
-[first_discard] r=3 & d6>0 & d1>0                           -> (d1'=d1-1) & (d6'=d6-1);
-[first_discard] r=3 & d6>0 & d1<=0 & d2>0                   -> (d2'=d2-1) & (d6'=d6-1);
-[first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3>0           -> (d3'=d3-1) & (d6'=d6-1);
-[first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3<=0 & d4>0   -> (d4'=d4-1) & (d6'=d6-1);
-[first_discard] r=3 & d6>0 & d1<=0 & d2<=0 & d3<=0 & d4<=0  -> true;
-[first_discard] r=3 & d6<=0  -> true;
+[first_discard] r=3 & discard>0 & d1>0                           -> (d1'=d1-1) & (discard'=discard-1);
+[first_discard] r=3 & discard>0 & d1<=0 & d2>0                   -> (d2'=d2-1) & (discard'=discard-1);
+[first_discard] r=3 & discard>0 & d1<=0 & d2<=0 & d3>0           -> (d3'=d3-1) & (discard'=discard-1);
+[first_discard] r=3 & discard>0 & d1<=0 & d2<=0 & d3<=0 & d4>0   -> (d4'=d4-1) & (discard'=discard-1);
+[first_discard] r=3 & discard>0 & d1<=0 & d2<=0 & d3<=0 & d4<=0  -> true;
+[first_discard] r=3 & discard<=0  -> true;
 
 
 
