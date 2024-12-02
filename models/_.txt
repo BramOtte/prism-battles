@@ -14,4 +14,4 @@ endmodule
 
 
 const <type> <constant_name>;
-P=? [F <guard>]
+P=? [F <guard>];
