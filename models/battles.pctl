@@ -8,4 +8,3 @@ Pmax=? [F r=8 & wounds>=6];
 Pmax=? [F r=8 & wounds>=7];
 Pmax=? [F r=8 & wounds>=8];
 Pmax=? [F r=8 & wounds>=9];
-Pmax=? [F r=8 & wounds>=10];

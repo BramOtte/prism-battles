@@ -1,114 +1,167 @@
+mod formats;
+use std::{fs::File, io::BufReader, path::Path, time::Instant};
+
+use formats::{states::States, transitions::{self, Transitions}};
 use rand::{distributions::Uniform, thread_rng, Rng};
 use rayon::prelude::*;
 
 
 fn main() {
-    println!("Hello, world!");
+    let folder = Path::new("../../results/strats/6-6");
+    let states = folder.join("states.sta");
+    let states = BufReader::new(File::open(states).unwrap());
+    let states = States::load(states).unwrap();
 
-    let attack = 10;
-    let defense = 10;
-    for attack in 1..=10 {
-    //     for defense in 1..=10 {
-            println!("{} {} {}", defense, attack, sim(defense, attack));
-    //     }
+    let initial_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10];
+
+
+
+    println!("{:?} {:?} {}", states.header, states.data.len(), states.data.len() / states.header.len());
+
+    let transitions_names = [
+        "rmax.tra"
+        , "pmax1.tra", "pmax2.tra", "pmax3.tra", "pmax4.tra", "pmax5.tra", "pmax6.tra", "pmax7.tra", "pmax8.tra", "pmax9.tra", "pmax10.tra"
+        ];
+    let transitions: Vec<Transitions> = transitions_names.par_iter().map(|trans| {
+        let trans = folder.join(trans);
+        println!("{:?}", trans);
+        let trans = BufReader::new(File::open(trans).unwrap());
+        let trans = Transitions::load(trans).unwrap();
+
+        trans
+    }).collect();
+
+    let mut initial_state = 0;
+    for i in 0..states.state_count() as u32 {
+        if states.get(i) == initial_values {
+            initial_state = i;
+            break;
+        }
+    }
+    let initial_state = initial_state;
+
+    for (trans, name) in transitions.iter().zip(transitions_names.iter()) {
+        let count = 1_000_000;
+        let a = Instant::now();
+        let wounds: Vec<i32> = (0..count).into_par_iter().map(|_| {
+            let state = {
+                let this = &trans;
+                let mut state = initial_state;
+                let mut rng = thread_rng();
+                loop {
+                    let next = this.step(state, rng.gen_range(0f32..1f32));
+                    if next == state {
+                        break state;
+                    }
+
+                    state = next;
+                }
+            };
+            let values = states.get(state);
+            let wounds = values[10];
+            wounds
+        }).collect();
+
+        let b = Instant::now();
+
+        let total = wounds.par_iter().copied().map(|w| w as i64).sum::<i64>();
+        let w1  = wounds.par_iter().copied().filter(|&w| w >=  1).count() as f64 / count as f64;
+        let w2  = wounds.par_iter().copied().filter(|&w| w >=  2).count() as f64 / count as f64;
+        let w3  = wounds.par_iter().copied().filter(|&w| w >=  3).count() as f64 / count as f64;
+        let w4  = wounds.par_iter().copied().filter(|&w| w >=  4).count() as f64 / count as f64;
+        let w5  = wounds.par_iter().copied().filter(|&w| w >=  5).count() as f64 / count as f64;
+        let w6  = wounds.par_iter().copied().filter(|&w| w >=  6).count() as f64 / count as f64;
+        let w7  = wounds.par_iter().copied().filter(|&w| w >=  7).count() as f64 / count as f64;
+        let w8  = wounds.par_iter().copied().filter(|&w| w >=  8).count() as f64 / count as f64;
+        let w9  = wounds.par_iter().copied().filter(|&w| w >=  9).count() as f64 / count as f64;
+        let w10 = wounds.par_iter().copied().filter(|&w| w >= 10).count() as f64 / count as f64;
+
+        let avg = total as f64 / count as f64;
+        let c = Instant::now();
+
+
+        println!("{}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.9}\t{:.6?}\t{:.6?}", name, avg, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, b.duration_since(a), c.duration_since(b));
+        let exp = trans.expected_value(initial_state, &|state| {
+            let values = states.get(state);
+            if values[14] == 8 {values[10]} else {0}
+        });
+        print!("\t\t{:.9}", exp);
+        for min in 1..=10 {
+            let prob = trans.expected_value(initial_state, &|state| {
+                let values = states.get(state);
+                if values[14] == 8 && values[10] >= min {1} else {0}
+            });
+            print!("\t{:.9}", prob);
+        }
+        println!();
     }
 
-}
+    // let mut rng = thread_rng();
+
+    // for i in 0..10 {
+
+    //     let mut state = 0;
+    //     for i in 0..states.state_count() as u32 {
+    //         if states.get(i) == initial_state {
+    //             state = i;
+    //             break;
+    //         }
+    //     }
+
+    //     println!("{}", states.header.join("\t"));
+    //     for value in states.get(state) {
+    //         print!("{}\t", value)
+    //     }
+    //     println!("{}", transitions_names[0]);
+
+    //     loop {
+    //         let rand = rng.gen_range(0f32..1f32);
+    //         let mut next = transitions.iter().map(|trans| {
+    //             trans.step(state, rand)
+    //         });
+    //         let first = next.next().unwrap();
+    //         for value in states.get(first) {
+    //             print!("{}\t", value)
+    //         }
+    //         println!("{}", transitions_names[0]);
+
+    //         let mut stop = false;
+    //         for (state, name) in next.zip(transitions_names.iter().skip(1)) {
+    //             if state == first {
+    //                 continue;
+    //             }
+    //             if !stop {
+    //                 println!("vvvv");
+    //             }
+    //             stop = true;
+    //             for value in states.get(state) {
+    //                 print!("{}\t", value)
+    //             }
+    //             println!("{}", name);
+    //         }
+    //         if stop {
+    //             break;
+    //         }
+    
+    //         // println!("{}", next_state);
+    //         if first == state {
+    //             break;
+    //         }
+    //         state = first;
+    //     }
+    //     println!();
+    // }
 
 
-fn sim(defense: i32, offense: i32) -> f64 {
-    let count = 20000000;
 
-    let wounds = (0..count)
-        .into_par_iter()
-        .map(|_| {
-        let die_dis = Uniform::from(0..=5);
+    // println!("defense\toffense\texpected wounds");
 
-        let mut dice: Vec<i32> = thread_rng().sample_iter(die_dis).take(offense as usize)
-            .filter(|&die| die != 0)
-            .collect();
-        dice.sort_by(|a, b| b.cmp(a));
-        let dice = dice;
+    // let attack = 10;
+    // let defense = 10;
+    // for attack in 10..=10 {
+    //     for defense in 5..=10 {
+    //         println!("{}\t{}\t{}", defense, attack, sim(defense, attack));
+    //     }
+    // }
 
-        // println!("first {:?}", dice);
-
-        if defense > 5 {
-            let mut points = dice.len() as i32;
-            let mut max_second_assault = 0;
-            for die in dice.iter().copied() {
-                if die < 5 {
-                    let delta = 1 + (5-die);
-                    if delta > points  {
-                        break;
-                    }
-                    points -= delta;
-                } else {
-                    points -= 1;
-                }
-                max_second_assault += 1;
-            }
-
-            let best = (0..=max_second_assault).map(|chosen| {
-                let mut wounds = 0;
-                let mut second_dice: Vec<i32> = thread_rng().sample_iter(die_dis).take(chosen).collect();
-
-                // println!("second {:?}", second_dice);
-
-                second_dice.sort_by(|a, b| b.cmp(a));
-                let second_dice = second_dice;
-                let mut points = dice.len() as i32 - second_dice.iter().copied().filter(|&die| die == 0).count() as i32;
-                for i in 0..second_dice.len() {
-                    if second_dice[i] == 0 {
-                        continue;
-                    }
-
-                    if second_dice[i]+5 < defense {
-                        let delta = 1 + (5-dice[i]) + (defense-5-second_dice[i]);
-                        if delta > points {
-                            break;
-                        }
-                        points -= delta;
-                    } else {
-                        points -= 1;
-                    }
-                    wounds += 1;
-                }
-                for i in second_dice.len()..dice.len() {
-                    let delta = 1 + (defense-dice[i]);
-                    if delta > points {
-                        break;
-                    }
-                    points -= delta;
-
-                    wounds += 1;
-                }
-                wounds
-            }).max().unwrap_or(0);
-
-            // println!("{}\n", best);
-            best
-        } else {
-            let mut points = dice.len() as i32;
-            let mut wounds = 0;
-            for i in 0..dice.len() {
-                if dice[i] < defense {
-                    let delta = defense+1-dice[i];
-                    if delta > points {
-                        break;
-                    }
-                    points -= delta
-                } else {
-                    points -= 1;
-                }
-
-                wounds += 1;
-            }
-            // println!("{}\n", wounds);
-            wounds
-        }
-    }).sum::<usize>();
-
-
-    wounds as f64 / count as f64
-    // let discard = rng.gen_range(0..dice.len())
 }

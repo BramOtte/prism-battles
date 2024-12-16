@@ -1,0 +1,11 @@
+P=? [F r=8];
+P=? [F r=8 & wounds>=1];
+P=? [F r=8 & wounds>=2];
+P=? [F r=8 & wounds>=3];
+P=? [F r=8 & wounds>=4];
+P=? [F r=8 & wounds>=5];
+P=? [F r=8 & wounds>=6];
+P=? [F r=8 & wounds>=7];
+P=? [F r=8 & wounds>=8];
+P=? [F r=8 & wounds>=9];
+P=? [F r=8 & wounds>=10];
