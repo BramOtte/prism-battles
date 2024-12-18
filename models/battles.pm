@@ -1,4 +1,8 @@
-mdp
+smg
+
+player p1
+    [first_boost]
+endplayer
 
 const int max_attack = 10;
 const int attack;
@@ -133,3 +137,11 @@ endmodule
 
 label "failure" = d1+d2+d3+d4+d5+d6+d7+d8+d9+wounds > max_attack;
 
+
+rewards "wounds"
+r = 7: wounds;
+endrewards
+
+rewards "reroll"
+r=3 & die_i=1: reroll;
+endrewards
