@@ -8,7 +8,7 @@ pub struct States {
 
 impl States {
     pub fn state_count(&self) -> usize {
-        self.data.len() - self.header.len()
+        self.data.len() / self.header.len()
     }
 
     pub fn get(&self, state: u32) -> &[i32] {

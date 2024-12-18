@@ -1,0 +1,6 @@
+[workspace]
+
+members = ["crates/battlesim"]
+
+[profile.bench]
+debug = true

@@ -1,37 +1,53 @@
 mod formats;
 use std::{fs::File, io::BufReader, path::Path, time::Instant};
 
-use formats::{states::States, transitions::{self, Transitions}};
-use rand::{distributions::Uniform, thread_rng, Rng};
+use formats::{smg::Smg, states::States, dtmc::Dtmc};
+use rand::{thread_rng, Rng};
 use rayon::prelude::*;
 
 
 fn main() {
-    let folder = Path::new("../../results/strats/6-6");
+    let folder = Path::new("../../out/strats/6-6");
+
+    // {
+    //     let start = Instant::now();
+    //     let tra = folder.join("model.tra");
+    //     let tra = BufReader::new(File::open(tra).unwrap());
+    //     let tra = Smg::load(tra).unwrap();
+    //     let end = Instant::now();
+
+    //     println!("{:?}", end.duration_since(start));
+    //     println!("{} {} {}", tra.states.len(), tra.actions.len(), tra.transitions.len());
+    //     return;
+    // }
+
     let states = folder.join("states.sta");
     let states = BufReader::new(File::open(states).unwrap());
     let states = States::load(states).unwrap();
 
-    let initial_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10];
+    let initial_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6];
 
 
 
     println!("{:?} {:?} {}", states.header, states.data.len(), states.data.len() / states.header.len());
 
     let transitions_names = [
-        "rmax.tra"
+        "rmax.tra",
+        "rmax-reroll.tra"
         , "pmax1.tra", "pmax2.tra", "pmax3.tra", "pmax4.tra", "pmax5.tra", "pmax6.tra", "pmax7.tra", "pmax8.tra", "pmax9.tra", "pmax10.tra"
         ];
-    let transitions: Vec<Transitions> = transitions_names.par_iter().map(|trans| {
+    let transitions: Vec<Dtmc> = transitions_names.par_iter().map(|trans| {
         let trans = folder.join(trans);
         println!("{:?}", trans);
         let trans = BufReader::new(File::open(trans).unwrap());
-        let trans = Transitions::load(trans).unwrap();
+        let trans = Dtmc::load(trans).unwrap();
 
         trans
     }).collect();
 
     let mut initial_state = 0;
+    println!("{:?} {}", states.header, states.data.len());
+
     for i in 0..states.state_count() as u32 {
         if states.get(i) == initial_values {
             initial_state = i;
@@ -39,6 +55,9 @@ fn main() {
         }
     }
     let initial_state = initial_state;
+    if initial_state == 0 {
+        panic!("Unable to find initial state {:?}", initial_values)
+    }
 
     for (trans, name) in transitions.iter().zip(transitions_names.iter()) {
         let count = 1_000_000;

@@ -1,13 +1,11 @@
 use rand::{thread_rng, Rng};
 
-use crate::formats::transitions;
-
-pub struct Transitions {
+pub struct Dtmc {
     pub states: Vec<u32>,
     pub transitions: Vec<(u32, f32)>,
 }
 
-impl Transitions {
+impl Dtmc {
     pub fn load<R: std::io::BufRead>(file: R) -> std::io::Result<Self> {
         let mut lines = file.lines();
         let first_line = lines.next().unwrap()?;
